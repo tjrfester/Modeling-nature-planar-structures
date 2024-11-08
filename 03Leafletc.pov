@@ -31,8 +31,8 @@ global_settings {
 
 
 #declare Hauptkamera = camera {
-    location  <-3, 4, -4>
-    look_at   <5, -2,  5>
+    location  <-1, 4, -3>
+    look_at   <7, -2,  7>
 }
 
 camera {Hauptkamera}
@@ -72,6 +72,23 @@ cylinder {
     }
 }
 
+
+//----------The envelope for the leaflet--------------------------------------------------------------
+
+// linear prism in y-direction: from .. ,to ..,number of points (first = last)
+#declare Envelope = prism { linear_sweep
+        cubic_spline
+        -0.2 ,1.2 , 8
+        <0.0, 0.30>, 
+        < 0.50,  0.00>, < 0.20,-0.75>, < -0.20,-0.75>, <-0.50, 0.00>,  <0.0, 0.30>, 
+        < 0.50, 0.00>, < 0.30, -0.55>   
+        texture {pigment{ color rgb <1,1,1>} 
+                 finish { phong 1.0}}
+        //rotate<0,90,0> 
+       scale 6
+        translate<5,-0.5,5.2> 
+      } // end of prism --------------------------------------------------------
+
 //---------------------------------The points and the splines (top-panel)-------------------------------------------------------------
 
 
@@ -96,7 +113,7 @@ cylinder {
 
 #declare ZPos = ticker2;
  
-#declare YPos = 0.4 *(rand(chance1)-0.5); //Variation of y-values between + and - 0.2
+#declare YPos = 0.2 *(rand(chance1)-0.5) + 0.03*ticker2*ticker2; //Variation of y-values between + and - 0.2
 
 #declare P1 = <XPos, YPos, ZPos>; 
 #declare Positions [ticker] [ticker2] = P1; //Storing positions
@@ -211,7 +228,7 @@ sphere {
     #while (ticker < 10) 
 
         sphere { 
-            <0,0,0>,  0.02
+            <0,0,0>,  0.01
             texture { 
                 pigment{ 
                     color rgb<0, 0.7, 1>
@@ -238,7 +255,7 @@ sphere {
     #while (ticker < 10) 
 
         sphere { 
-            <0,0,0>,  0.02
+            <0,0,0>,  0.01
             texture { 
                 pigment{ 
                     color rgb<1.00, 0.7, 0.00>
@@ -264,141 +281,152 @@ sphere {
 
 //-----------------------------------Calculation of the patch-----------------------------------------------
 
-//Flat spheres are distributed regularly along the x- and z-coordinated of the patch. Their y-position is calculated by combining the y-coordinates of fitting to respective x-z-coordinates. 
-//Normals are calculated by combining combining values for spline-gradients 
-blob {
-    threshold 0.6
 
-    #declare tickerx = 0;                                    //loop over all x-values; since it is running in 0.1-steps, 110 outer loops will take place
-    #while (tickerx<10)
 
-        #declare tickerz = 0;                                //loop over all z-values; since it is running in 0.1 steps, 110 inner loops will take place and 12100 positions in total will be defined.
-        #while (tickerz < 10) 
+intersection {
+    object {
+        Envelope
+    }
+
+
+    //Flat spheres are distributed regularly along the x- and z-coordinated of the patch. Their y-position is calculated by combining the y-coordinates of fitting to respective x-z-coordinates. 
+    //Normals are calculated by combining combining values for spline-gradients 
+    blob {
+        threshold 0.6
+
+        #declare tickerx = 0;                                    //loop over all x-values; since it is running in 0.1-steps, 110 outer loops will take place
+        #while (tickerx<10)
+
+            #declare tickerz = 0;                                //loop over all z-values; since it is running in 0.1 steps, 110 inner loops will take place and 12100 positions in total will be defined.
+            #while (tickerz < 10) 
     
-            #declare P0 = Positions [tickerx][tickerz];      //since this array was initially defined as an 11 x 11 array, y-positions extracted only apply to this rough grid
+                #declare P0 = Positions [tickerx][tickerz];      //since this array was initially defined as an 11 x 11 array, y-positions extracted only apply to this rough grid
 
 
-            //For each position a pair of closeby/adjacent splines in x-direction and a pair of closeby splines in z-direction are defined in order to adjust y-coordinate and orientation (normal).
+                //For each position a pair of closeby/adjacent splines in x-direction and a pair of closeby splines in z-direction are defined in order to adjust y-coordinate and orientation (normal).
 
-            //Definition of closeby/adjacent splines in x-direction
+                //Definition of closeby/adjacent splines in x-direction
             
-            #if (P0.z <10) //This condition excludes the last row of points (at P0.z = 10) avoiding any reference to a non-existing SplineXs[11]
-                #declare SplineXStart = SplineXs[floor (P0.z)]; 
-                #declare SplineXEnd = SplineXs[ floor (P0.z) + 1];
-                #declare ResZ = tickerz - floor (P0.z);  
-            #else
-            #end 
+                #if (P0.z <10) //This condition excludes the last row of points (at P0.z = 10) avoiding any reference to a non-existing SplineXs[11]
+                    #declare SplineXStart = SplineXs[floor (P0.z)]; 
+                    #declare SplineXEnd = SplineXs[ floor (P0.z) + 1];
+                    #declare ResZ = tickerz - floor (P0.z);  
+                #else
+                #end 
 
-            //Definition of closeby/adjacent splines in z-direction            
-            #if (P0.x <10) //This condition excludes the last row of points (at P0.z = 10) avoiding any reference to a non-existing SplineZs[11]
-                #declare SplineZStart = SplineZs[floor (P0.x)]; 
-                #declare SplineZEnd = SplineZs[ floor (P0.x) + 1];
-                #declare ResX = tickerx - floor (P0.x);  
-            #else
-            #end 
+                //Definition of closeby/adjacent splines in z-direction            
+                #if (P0.x <10) //This condition excludes the last row of points (at P0.z = 10) avoiding any reference to a non-existing SplineZs[11]
+                    #declare SplineZStart = SplineZs[floor (P0.x)]; 
+                    #declare SplineZEnd = SplineZs[ floor (P0.x) + 1];
+                    #declare ResX = tickerx - floor (P0.x);  
+                #else
+                #end 
             
 
-            //Calculating the y-coordinate
+                //Calculating the y-coordinate
 
-            //Two points on closeby splines in z-direction fitting to the z-coordinate of the point in question are defined
-            #declare P1 = SplineZStart(tickerz);
-            #declare P2 = SplineZEnd(tickerz);
+                //Two points on closeby splines in z-direction fitting to the z-coordinate of the point in question are defined
+                #declare P1 = SplineZStart(tickerz);
+                #declare P2 = SplineZEnd(tickerz);
             
-            //y-coordinates of the two points just defined are combined.    
-            #declare Heightz = P1.y + ResX*(P2.y-P1.y); 
-
-            //Two points on closeby splines in z-direction fitting to the z-coordinate of the point in question are defined
-            #declare P3 = SplineXStart(tickerx);
-            #declare P4 = SplineXEnd(tickerx);
-            
-            //y-coordinates of the two points just defined are combined.      
-            #declare Heightx = P3.y + ResZ*(P4.y-P3.y) ;
-
-            //y-coordinates from the x- and z-directions are combined - here a linear combination is sufficient. 
-            #declare Height = (Heightz + Heightx)/2; 
-
-
-
-            //Calculating Normals: First for the adjacent Splines in z-direction ...
-
-            #declare AZ1 = SplineZStart(tickerz+0.1) - SplineZStart(tickerz-0.1);
-            #declare AZ2 = SplineZEnd(tickerz+0.1) - SplineZEnd(tickerz-0.1);
-            
-            //Combinations alternatively using sinus or linear
-            //#declare AZ = sin(0.5*pi *(1-ResX))*AZ1 + sin(0.5*pi*ResX)*AZ2; 
-            #declare AZ = (1-ResX)*AZ1 + ResX*AZ2;
-
-            //... then for the adjacent splines in x-direction
-            #declare AX1 = SplineXStart(tickerx+0.1) - SplineXStart(tickerx-0.1);
-            #declare AX2 = SplineXEnd(tickerx+0.1) - SplineXEnd(tickerx-0.1); 
-            
-            //Combinations alternatively using sinus or linear
-            //#declare AX = sin(0.5*pi*(1-ResZ))*AX1 + sin(0.5*pi*ResZ)*AX2; 
-            #declare AX =  (1-ResZ)*AX1 + ResZ*AX2;
-            
-            //Normals are defined by the cross-product of vectors along x- and y-axes            
-            #declare Normal = vcross(AX, AZ); 
+                #declare Heightz = P1.y + ResX*(P2.y-P1.y); 
             
             
-            //Positioning and rotating elements according to the values just calculated
+                //Two points on closeby splines in z-direction fitting to the z-coordinate of the point in question are defined
+                #declare P3 = SplineXStart(tickerx);
+                #declare P4 = SplineXEnd(tickerx);
+                
+                #declare Heightx = P3.y + ResZ*(P4.y-P3.y) ;
+
+                //y-coordinates from the x- and z-directions are combined. 
+                #declare Height = (Heightz + Heightx)/2; 
+
+
+
+                //Calculating Normals: First for the adjacent Splines in z-direction ...
+
+                #declare AZ1 = SplineZStart(tickerz+0.1) - SplineZStart(tickerz-0.1);
+                #declare AZ2 = SplineZEnd(tickerz+0.1) - SplineZEnd(tickerz-0.1);
             
-            #if (abs(Normal.x)>abs(Normal.z)) 
+                //Combinations alternatively using sinus or linear
+                //#declare AZ = sin(0.5*pi *(1-ResX))*AZ1 + sin(0.5*pi*ResX)*AZ2; 
+                #declare AZ = (1-ResX)*AZ1 + ResX*AZ2;
+
+                //... then for the adjacent splines in x-direction
+                #declare AX1 = SplineXStart(tickerx+0.1) - SplineXStart(tickerx-0.1);
+                #declare AX2 = SplineXEnd(tickerx+0.1) - SplineXEnd(tickerx-0.1); 
+            
+                //Combinations alternatively using sinus or linear
+                //#declare AX = sin(0.5*pi*(1-ResZ))*AX1 + sin(0.5*pi*ResZ)*AX2; 
+                #declare AX =  (1-ResZ)*AX1 + ResZ*AX2;
+            
+                //Normals are defined by the cross-product of vectors along x- and y-axes            
+                #declare Normal = vcross(AX, AZ); 
+            
+            
+                //Positioning and rotating elements according to the values just calculated
+            
+                #if (abs(Normal.x)>abs(Normal.z)) 
 
 
-                #local AngleY = degrees(atan2(Normal.z, Normal.x));  
-                #local N2 = vrotate (Normal, <0, AngleY, 0>);
-                #local AngleZ = degrees(atan2(N2.y, N2.x));
-                sphere {                                                       
-                    <0, 0, 0>, 0.17, 1
-                    scale<1,0.1,1> 
-                    rotate <0, 90, 0>
-                    rotate <0, 0, 270 +AngleZ>
-                    rotate <0, -AngleY, 0>
-                    translate <tickerx, Height, tickerz>
-                    pigment {
-                        color rgb <1,1,1>     // solid color pigment
-                    }  
-                }
-
-
-            #else
-
-                #if (abs(Normal.z)>0)
-
-                    #local AngleY = degrees(atan2(Normal.x, Normal.z));
-                    #local N2 = vrotate (Normal, <0, -AngleY, 0>); 
-                    #local AngleX = -degrees(atan2(N2.y, N2.z));
-                    sphere { 
-                        <0, 0, 0>, 0.17 , 1                                           
-                        scale<1,0.1,1>   
-                        rotate <AngleX+90, 0, 0>
-                        rotate <0, AngleY, 0>
-                        translate <tickerx, Height, tickerz> 
-                        pigment {
-                            color rgb <1,1,1>     // solid color pigment
-                        }
-                    }
-  
-                #else//This covers positions with  
-
-                    sphere {                                                    
+                    #local AngleY = degrees(atan2(Normal.z, Normal.x));  
+                    #local N2 = vrotate (Normal, <0, AngleY, 0>);
+                    #local AngleZ = degrees(atan2(N2.y, N2.x));
+                    sphere {                                                       
                         <0, 0, 0>, 0.17, 1
                         scale<1,0.1,1> 
-                        translate <tickerx, Height, tickerz> 
-                        pigment {
-                            color rgb <1,1,1>     // solid color pigment
+                        rotate <0, 90, 0>
+                        rotate <0, 0, 270 +AngleZ>
+                        rotate <0, -AngleY, 0>
+                        translate <tickerx, Height, tickerz>
+
                     }
 
-                #end 
-            #end  
+
+                #else
+
+                    #if (abs(Normal.z)>0)
+
+                        #local AngleY = degrees(atan2(Normal.x, Normal.z));
+                        #local N2 = vrotate (Normal, <0, -AngleY, 0>); 
+                        #local AngleX = -degrees(atan2(N2.y, N2.z));
+                        sphere { 
+                            <0, 0, 0>, 0.17 , 1                                           
+                            scale<1,0.1,1>   
+                            rotate <AngleX+90, 0, 0>
+                            rotate <0, AngleY, 0>
+                            translate <tickerx, Height, tickerz> 
+
+                        }
+  
+                    #else//This covers positions with  
+
+                        sphere {                                                    
+                            <0, 0, 0>, 0.17, 1
+                            scale<1,0.1,1> 
+                            translate <tickerx, Height, tickerz> 
+
+                    #end 
+                #end  
          
         
 
-        #declare tickerz = tickerz + 0.1; 
+            #declare tickerz = tickerz + 0.1; 
+            #end
+
+        #declare tickerx = tickerx + 0.1; 
         #end
-
-    #declare tickerx = tickerx + 0.1; 
-    #end
+        texture {                      
+            pigment {
+                gradient z                       // patterned pigment
+                color_map {
+                [0.01 rgb <1,0.2,0.2> ]
+                [0.4 rgbt <1,0.9,0.9> ]
+                [0.6 rgbt <1,0.9,0.9>]
+                } 
+                scale 7
+                translate <0, 0, 0> 
+            }
+        } // end of texture
+    }
 }
-
-
