@@ -13,4 +13,8 @@ Given the right colour, this might be a small petal
 ![04Leaflet](https://github.com/user-attachments/assets/82ee623c-fc7a-44c3-97b4-cd948805715e)
 Using the nervature of leaves for anchoring, it is also possible to model leaves. Currently I only achieved this with smaller leaves like here. 
 ![05SmallLeaflet](https://github.com/user-attachments/assets/a423f248-bbbc-481a-858d-720b03f1d904)
-So, as I told, progress in this area is always welcome!
+In an extension of the approach from above I modeled a beech leaf
+![BeechLateralVeins250](https://github.com/user-attachments/assets/95e686ff-5d36-4f2b-a828-113ee85b2349)
+Above is my simple version with lateral veins somehow printed on top:
+![BeechVeinsFullConstructingf000](https://github.com/user-attachments/assets/7b5bec41-d056-40fe-95fd-ccb4d8e14c12)
+And this is a more complex solution with lateral leaf veins guiding the construction of leaf blades - have a look at my respective video on youtube. 
